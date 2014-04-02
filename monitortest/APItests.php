@@ -1,13 +1,33 @@
 <?php
-/*
- * Part of the MariaDB Manager Test Suite. This file is distributed as part of the MariaDB Manager. It is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA. Copyright 2014 SkySQL Corporation Ab Author: Massimo Siani Date: March 2014
- */
+/**
+* Part of the MariaDB Manager Test Suite.
+* 
+* This file is distributed as part of the MariaDB Manager.  It is free
+* software: you can redistribute it and/or modify it under the terms of the
+* GNU General Public License as published by the Free Software Foundation,
+* version 2.
+*
+* This program is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+* FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public License along with
+* this program; if not, write to the Free Software Foundation, Inc., 51
+* Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*
+* Copyright 2014 SkySQL Corporation Ab
+*
+* Author: Massimo Siani
+* Date: March 2014
+*/
 require_once '../API/tasks/Define.php';
 
-foreach ( glob ( "../API/{classes,nodes,systems,tasks}/*.php", GLOB_BRACE ) as $file ) {
+foreach ( glob ( "../API/{classes,monitors,nodes,systems,tasks}/*.php", GLOB_BRACE ) as $file ) {
 	require_once ($file);
 }
 
+use com\skysql\test\common\monitors\MonitorRawData;
 use com\skysql\test\common\tasks\NodeIsolate;
 use com\skysql\test\common\tasks\NodeRejoin;
 use com\skysql\test\common\tasks\NodeRestart;
@@ -109,8 +129,7 @@ if ($lastNodeState ['node'] ['state'] == "joined") {
 $numberOfTests ++;
 
 // Stop all
-for($count = 4; $count >= 1; $count --) {
-	$remainingNodes = $count;
+for($count = 4, $remainingNodes = 4; $count >= 1; $count --) {
 	print "Node $count Stop: ";
 	$nodeStop = new NodeStop ( $commandParameters . "&nodeid=$count", $apikeyid, $apikey );
 	$nodeStop->go ();
@@ -119,6 +138,7 @@ for($count = 4; $count >= 1; $count --) {
 	$lastNodeState = $nodeInfo->go ();
 	if ($lastNodeState ['node'] ['state'] == "down") {
 		echo "SUCCESS" . "\n";
+		$remainingNodes --;
 	} else {
 		echo "FAIL, try with a longer timeout?" . "\n";
 		$failedTests ++;
@@ -126,7 +146,7 @@ for($count = 4; $count >= 1; $count --) {
 	$numberOfTests ++;
 	if ($remainingNodes == 0) {
 		$expectedSystemState = "down";
-	} elseif (0 < $remainingNodes <= 2) {
+	} elseif ($remainingNodes > 0 && $remainingNodes <= 2) {
 		$expectedSystemState = "limited-availability";
 	} elseif ($remainingNodes >= 3) {
 		$expectedSystemState = "available";
@@ -140,6 +160,64 @@ for($count = 4; $count >= 1; $count --) {
 		$failedTests ++;
 	}
 	$numberOfTests ++;
+}
+
+sleep($timeout);
+// Node Monitors
+$nodeMonitorsMetadata = array (
+		"availability" => array (
+				"expected" => "0.0",
+				"system" => "0.0" 
+		),
+		"capacity" => array (
+				"expected" => "0.0" 
+		),
+		"connections" => array (
+				"expected" => "0.0" 
+		),
+		"clustersize" => array (
+				"expected" => "0.0" 
+		) 
+);
+foreach ( $nodeMonitorsMetadata as $nodeMonitorKey => $value ) {
+	for($count = 1; $count <= 4; $count ++) {
+		$nodeMonitorObj = new MonitorRawData ( $systemid, $count, $nodeMonitorKey, $apikeyid, $apikey );
+		$failedTests += nodeMonitor ( $nodeMonitorObj, $value ['expected'] );
+		$numberOfTests ++;
+	}
+}
+foreach ( $nodeMonitorsMetadata as $nodeMonitorKey => $value ) {
+	if (isset ( $value ['system'] )) {
+		$systemMonitorObj = new MonitorRawData ( $systemid, $nodeMonitorKey, $apikeyid, $apikey );
+		$failedTests += systemMonitor ( $systemMonitorObj, $value ['system'] );
+		$numberOfTests ++;
+	}
+}
+function nodeMonitor(&$monitorRawDataObj, $valueExpected) {
+	$lastNodeMonitor = $monitorRawDataObj->go ();
+	$valueObs = end ( $lastNodeMonitor ['monitor_rawdata'] ['value'] );
+	print "Node " . $monitorRawDataObj->getNodeId () . " " . $monitorRawDataObj->getMonitorKey ();
+	print ":    expected $valueExpected    got $valueObs:    ";
+	if ($valueObs == $valueExpected) {
+		print "SUCCESS\n";
+		return 0;
+	} else {
+		print "FAIL\n";
+		return 1;
+	}
+}
+function systemMonitor(&$monitorRawDataObj, $valueExpected) {
+	$lastSystemMonitor = $monitorRawDataObj->go ();
+	$valueObs = end ( $lastSystemMonitor ['monitor_rawdata'] ['value'] );
+	print "System " . $monitorRawDataObj->getMonitorKey ();
+	print ":    expected $valueExpected    got $valueObs:    ";
+	if ($valueObs == $valueExpected) {
+		print "SUCCESS\n";
+		return 0;
+	} else {
+		print "FAIL\n";
+		return 1;
+	}
 }
 
 $successfulTests = $numberOfTests - $failedTests;

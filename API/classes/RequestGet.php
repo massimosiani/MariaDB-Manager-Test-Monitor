@@ -1,5 +1,5 @@
 <?php
-/*
+/**
  * Part of the MariaDB Manager Test Suite.
  * 
  * This file is distributed as part of the MariaDB Manager.  It is free

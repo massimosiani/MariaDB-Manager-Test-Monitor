@@ -1,5 +1,5 @@
 <?php
-/*
+/**
  * Part of the MariaDB Manager Test Suite.
  * 
  * This file is distributed as part of the MariaDB Manager.  It is free
@@ -60,21 +60,21 @@ class Request {
 			), $args );
 		}
 	}
-	protected function construct0() {
+	private function construct0() {
 	}
-	protected function construct1($uri) {
+	private function construct1($uri) {
 		$this->uri = $uri;
 	}
-	protected function construct2($apiKeyId, $apiKey) {
+	private function construct2($apiKeyId, $apiKey) {
 		$this->apiKeyId = $apiKeyId;
 		$this->apiKey = $apiKey;
 	}
-	protected function construct3($uri, $apiKeyId, $apiKey) {
+	private function construct3($uri, $apiKeyId, $apiKey) {
 		$this->uri = $uri;
 		$this->apiKeyId = $apiKeyId;
 		$this->apiKey = $apiKey;
 	}
-	protected function construct4($uri, $parameters, $apiKeyId, $apiKey) {
+	private function construct4($uri, $parameters, $apiKeyId, $apiKey) {
 		$this->construct3($uri, $apiKeyId, $apiKey);
 		$this->parameters = $parameters;
 	}
@@ -149,7 +149,7 @@ class Request {
 	
 	/**
 	 * @param string $url
-	 * @param array $data
+	 * @param array $parameters
 	 * @param array $headers
 	 * @return string
 	 */
