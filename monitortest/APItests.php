@@ -1,31 +1,11 @@
 <?php
 /*
- * Part of the MariaDB Manager Test Suite.
- *
- * This file is distributed as part of the MariaDB Manager.  It is free
- * software: you can redistribute it and/or modify it under the terms of the
- * GNU General Public License as published by the Free Software Foundation,
- * version 2.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
- * details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 51
- * Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Copyright 2014 SkySQL Corporation Ab
- *
- * Author: Massimo Siani
- * Date: March 2014
+ * Part of the MariaDB Manager Test Suite. This file is distributed as part of the MariaDB Manager. It is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA. Copyright 2014 SkySQL Corporation Ab Author: Massimo Siani Date: March 2014
  */
-
 require_once '../API/tasks/Define.php';
 
-foreach(glob("../API/{classes,nodes,systems,tasks}/*.php", GLOB_BRACE) as $file) {
-	require_once($file);
+foreach ( glob ( "../API/{classes,nodes,systems,tasks}/*.php", GLOB_BRACE ) as $file ) {
+	require_once ($file);
 }
 
 use com\skysql\test\common\tasks\NodeIsolate;
@@ -36,78 +16,131 @@ use com\skysql\test\common\tasks\NodeStop;
 use com\skysql\test\common\nodes\Node;
 use com\skysql\test\common\systems\System;
 
+gc_enable ();
 $apikeyid = 5;
 $apikey = "84e915085ab3d2673ac5d5f99946e359";
 $adminUser = "admin";
 $systemid = 1;
-$nodeid = 1;
-$commandParameters = "systemid=$systemid&nodeid=$nodeid&username=$adminUser";
-$timeout = 15;
+$nodeid = 4;
+$commandParameters = "systemid=$systemid&username=$adminUser";
+$singleCommandParameters = $commandParameters . "&nodeid=$nodeid";
+$timeout = 40;
 
-$node = new Node( $systemid, $nodeid, $apikeyid, $apikey );
+// Ensure there are at least four nodes
+$systemInfo = new System ( $systemid, $apikeyid, $apikey );
+$lastSystemInfo = $systemInfo->go ();
+if (count ( $lastSystemInfo ['system'] ['nodes'] ) < 4) {
+	print "ERROR: there must be at least four nodes.\n";
+	exit ( 1 );
+}
+// Ensure the nodes and the system are in the down state
+if ($lastSystemInfo ['system'] ['state'] != "down") {
+	print "ERROR: the system must be down.\n";
+	exit ( 1 );
+}
 $numberOfTests = 0;
 $failedTests = 0;
 
-$nodeStart = new NodeStart( $commandParameters, $apikeyid, $apikey );
-$nodeStart->go ();
-sleep($timeout * 2);
-$lastNodeState = $node->go ();
-if ($lastNodeState['node']['state'] == "joined") {
-	echo "Node Start: SUCCESS" . "\n";
-} else {
-	echo "Node Start: FAIL, try with a longer timeout?" . "\n";
-	$failedTests++;
+// Nodes up, system running
+for($count = 1; $count <= 4; $count ++) {
+	print "Node $count Start: ";
+	$nodeStart = new NodeStart ( $commandParameters . "&nodeid=$count", $apikeyid, $apikey );
+	$nodeStart->go ();
+	sleep ( $timeout * 2 );
+	$nodeInfo = new Node ( $systemid, $count, $apikeyid, $apikey );
+	$lastNodeState = $nodeInfo->go ();
+	if ($lastNodeState ['node'] ['state'] == "joined") {
+		echo "SUCCESS\n";
+	} else {
+		echo "FAIL, try with a longer timeout?\n";
+		$failedTests ++;
+	}
+	$numberOfTests ++;
 }
-$numberOfTests++;
+$lastSystemInfo = $systemInfo->go ();
+if ($lastSystemInfo ['system'] ['state'] == "running") {
+	echo "System Running state: SUCCESS" . "\n";
+} else {
+	echo "System Running state: FAIL, try with a longer timeout?" . "\n";
+	$failedTests ++;
+}
+$numberOfTests ++;
 
-$nodeIsolate = new NodeIsolate( $commandParameters, $apikeyid, $apikey );
+// Isolate
+print "Node $nodeid Isolate: ";
+$nodeIsolate = new NodeIsolate ( $singleCommandParameters, $apikeyid, $apikey );
 $nodeIsolate->go ();
-sleep($timeout * 2);
-$lastNodeState = $node->go ();
-if ($lastNodeState['node']['state'] == "isolated") {
-	echo "Node Isolate: SUCCESS" . "\n";
+sleep ( $timeout * 2 );
+$lastNodeState = $nodeInfo->go ();
+if ($lastNodeState ['node'] ['state'] == "isolated") {
+	echo "SUCCESS" . "\n";
 } else {
-	echo "Node Isolate: FAIL, try with a longer timeout?" . "\n";
-	$failedTests++;
+	echo "FAIL, try with a longer timeout?" . "\n";
+	$failedTests ++;
 }
-$numberOfTests++;
+$numberOfTests ++;
 
-$nodeRejoin = new NodeRejoin( $commandParameters, $apikeyid, $apikey );
+// Rejoin
+print "Node $nodeid Rejoin: ";
+$nodeRejoin = new NodeRejoin ( $singleCommandParameters, $apikeyid, $apikey );
 $nodeRejoin->go ();
-sleep($timeout * 2);
-$lastNodeState = $node->go ();
-if ($lastNodeState['node']['state'] == "joined") {
-	echo "Node Rejoin: SUCCESS" . "\n";
+sleep ( $timeout * 2 );
+$lastNodeState = $nodeInfo->go ();
+if ($lastNodeState ['node'] ['state'] == "joined") {
+	echo "SUCCESS" . "\n";
 } else {
-	echo "Node Rejoin: FAIL, try with a longer timeout?" . "\n";
-	$failedTests++;
+	echo "FAIL, try with a longer timeout?" . "\n";
+	$failedTests ++;
 }
-$numberOfTests++;
+$numberOfTests ++;
 
-$nodeRestart = new NodeRestart( $commandParameters, $apikeyid, $apikey );
+// Restart
+print "Node $nodeid Restart: ";
+$nodeRestart = new NodeRestart ( $singleCommandParameters, $apikeyid, $apikey );
 $nodeRestart->go ();
-sleep($timeout * 2);
-$lastNodeState = $node->go ();
-if ($lastNodeState['node']['state'] == "joined") {
-	echo "Node Restart: SUCCESS" . "\n";
+sleep ( $timeout * 2 );
+$lastNodeState = $nodeInfo->go ();
+if ($lastNodeState ['node'] ['state'] == "joined") {
+	echo "SUCCESS" . "\n";
 } else {
-	echo "Node Restart: FAIL, try with a longer timeout?" . "\n";
-	$failedTests++;
+	echo "FAIL, try with a longer timeout?" . "\n";
+	$failedTests ++;
 }
-$numberOfTests++;
+$numberOfTests ++;
 
-$nodeStop = new NodeStop( $commandParameters, $apikeyid, $apikey );
-$nodeStop->go ();
-sleep($timeout);
-$lastNodeState = $node->go ();
-if ($lastNodeState['node']['state'] == "down") {
-	echo "Node Stop: SUCCESS" . "\n";
-} else {
-	echo "Node Stop: FAIL, try with a longer timeout?" . "\n";
-	$failedTests++;
+// Stop all
+for($count = 4; $count >= 1; $count --) {
+	$remainingNodes = $count;
+	print "Node $count Stop: ";
+	$nodeStop = new NodeStop ( $commandParameters . "&nodeid=$count", $apikeyid, $apikey );
+	$nodeStop->go ();
+	sleep ( $timeout );
+	$nodeInfo = new Node ( $systemid, $count, $apikeyid, $apikey );
+	$lastNodeState = $nodeInfo->go ();
+	if ($lastNodeState ['node'] ['state'] == "down") {
+		echo "SUCCESS" . "\n";
+	} else {
+		echo "FAIL, try with a longer timeout?" . "\n";
+		$failedTests ++;
+	}
+	$numberOfTests ++;
+	if ($remainingNodes == 0) {
+		$expectedSystemState = "down";
+	} elseif (0 < $remainingNodes <= 2) {
+		$expectedSystemState = "limited-availability";
+	} elseif ($remainingNodes >= 3) {
+		$expectedSystemState = "available";
+	}
+	$lastSystemInfo = $systemInfo->go ();
+	print "System $expectedSystemState state: ";
+	if ($lastSystemInfo ['system'] ['state'] == $expectedSystemState) {
+		echo "SUCCESS\n";
+	} else {
+		echo "FAIL, try with a longer timeout?\n";
+		$failedTests ++;
+	}
+	$numberOfTests ++;
 }
-$numberOfTests++;
-
 
 $successfulTests = $numberOfTests - $failedTests;
 echo "Tests done: $numberOfTests, Successful: $successfulTests, Failed: $failedTests \n";
