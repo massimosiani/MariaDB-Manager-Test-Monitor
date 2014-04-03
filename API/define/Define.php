@@ -1,5 +1,5 @@
 <?php
-/*
+/**
  * Part of the MariaDB Manager Test Suite.
  *
  * This file is distributed as part of the MariaDB Manager.  It is free
@@ -19,31 +19,8 @@
  * Copyright 2014 SkySQL Corporation Ab
  *
  * Author: Massimo Siani
- * Date: March 2014
+ * Date: April 2014
  */
-
-require_once("../API/tasks/Define.php");
-
-foreach(glob("../API/{classes,nodes,systems,tasks}/*.php", GLOB_BRACE) as $file) {
-	require_once($file);
+if (! defined ( "CLASSES_ABS_PATH" )) {
+	define ( "CLASSES_ABS_PATH", dirname ( __DIR__ ) . "/classes" );
 }
-
-use com\skysql\test\common\tasks\NodeStart;
-use com\skysql\test\common\tasks\NodeStop;
-use com\skysql\test\common\nodes\Node;
-
-$systemid = 1;
-$nodeid = 1;
-$apikeyid = 4;
-$apikey = "2fdcf31f8e5e33582cd4c8d584d83361";
-
-$nodeStart = new NodeStart( "systemid=$systemid&nodeid=$nodeid&username=pippo", $apikeyid, $apikey );
-$nodeStart->go ();
-
-$nodeStop = new NodeStop( "systemid=$systemid&nodeid=$nodeid&username=pippo", $apikeyid, $apikey );
-$nodeStop->go ();
-
-$node = new Node( $systemid, $nodeid, $apikeyid, $apikey );
-$last = $node->go ();
-echo $last["node"]["state"] . "\n";
-

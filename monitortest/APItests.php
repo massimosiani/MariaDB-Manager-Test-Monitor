@@ -21,13 +21,13 @@
 * Author: Massimo Siani
 * Date: March 2014
 */
-require_once '../API/tasks/Define.php';
+require_once '../API/define/Define.php';
 
 foreach ( glob ( "../API/{classes,monitors,nodes,systems,tasks}/*.php", GLOB_BRACE ) as $file ) {
 	require_once ($file);
 }
 
-use com\skysql\test\common\monitors\MonitorRawData;
+use com\skysql\test\common\monitors\MonitorData;
 use com\skysql\test\common\tasks\NodeIsolate;
 use com\skysql\test\common\tasks\NodeRejoin;
 use com\skysql\test\common\tasks\NodeRestart;
@@ -181,22 +181,22 @@ $nodeMonitorsMetadata = array (
 );
 foreach ( $nodeMonitorsMetadata as $nodeMonitorKey => $value ) {
 	for($count = 1; $count <= 4; $count ++) {
-		$nodeMonitorObj = new MonitorRawData ( $systemid, $count, $nodeMonitorKey, $apikeyid, $apikey );
+		$nodeMonitorObj = new MonitorData ( $systemid, $count, $nodeMonitorKey, $apikeyid, $apikey );
 		$failedTests += nodeMonitor ( $nodeMonitorObj, $value ['expected'] );
 		$numberOfTests ++;
 	}
 }
 foreach ( $nodeMonitorsMetadata as $nodeMonitorKey => $value ) {
 	if (isset ( $value ['system'] )) {
-		$systemMonitorObj = new MonitorRawData ( $systemid, $nodeMonitorKey, $apikeyid, $apikey );
+		$systemMonitorObj = new MonitorData ( $systemid, $nodeMonitorKey, $apikeyid, $apikey );
 		$failedTests += systemMonitor ( $systemMonitorObj, $value ['system'] );
 		$numberOfTests ++;
 	}
 }
-function nodeMonitor(&$monitorRawDataObj, $valueExpected) {
-	$lastNodeMonitor = $monitorRawDataObj->go ();
-	$valueObs = end ( $lastNodeMonitor ['monitor_rawdata'] ['value'] );
-	print "Node " . $monitorRawDataObj->getNodeId () . " " . $monitorRawDataObj->getMonitorKey ();
+function nodeMonitor(&$monitorDataObj, $valueExpected) {
+	$lastNodeMonitor = $monitorDataObj->go ();
+	$valueObs = end ( $lastNodeMonitor );
+	print "Node " . $monitorDataObj->getNodeId () . " " . $monitorDataObj->getMonitorKey ();
 	print ":    expected $valueExpected    got $valueObs:    ";
 	if ($valueObs == $valueExpected) {
 		print "SUCCESS\n";
@@ -206,10 +206,10 @@ function nodeMonitor(&$monitorRawDataObj, $valueExpected) {
 		return 1;
 	}
 }
-function systemMonitor(&$monitorRawDataObj, $valueExpected) {
-	$lastSystemMonitor = $monitorRawDataObj->go ();
-	$valueObs = end ( $lastSystemMonitor ['monitor_rawdata'] ['value'] );
-	print "System " . $monitorRawDataObj->getMonitorKey ();
+function systemMonitor(&$monitorDataObj, $valueExpected) {
+	$lastSystemMonitor = $monitorDataObj->go ();
+	$valueObs = end ( $lastSystemMonitor );
+	print "System " . $monitorDataObj->getMonitorKey ();
 	print ":    expected $valueExpected    got $valueObs:    ";
 	if ($valueObs == $valueExpected) {
 		print "SUCCESS\n";
