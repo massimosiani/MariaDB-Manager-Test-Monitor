@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * Part of the MariaDB Manager Test Suite.
  *
  * This file is distributed as part of the MariaDB Manager.  It is free
@@ -21,6 +21,10 @@
  * Author: Massimo Siani
  * Date: April 2014
  */
+
+if (! defined ( "API_ABS_PATH" )) {
+	define ( "API_ABS_PATH", dirname ( __DIR__ ) );
+}
 if (! defined ( "CLASSES_ABS_PATH" )) {
-	define ( "CLASSES_ABS_PATH", dirname ( __DIR__ ) . "/classes" );
+	define ( "CLASSES_ABS_PATH", API_ABS_PATH . "/classes" );
 }

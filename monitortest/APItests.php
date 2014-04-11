@@ -26,7 +26,11 @@ require_once '../API/define/Define.php';
 foreach ( glob ( "../API/{classes,monitors,nodes,systems,tasks}/*.php", GLOB_BRACE ) as $file ) {
 	require_once ($file);
 }
+foreach ( glob ( "./classes/{nodes,systems}/*.php", GLOB_BRACE ) as $file ) {
+	require_once ($file);
+}
 
+use com\skysql\test\classes\nodes\ExecuteRemote;
 use com\skysql\test\common\monitors\MonitorData;
 use com\skysql\test\common\tasks\NodeIsolate;
 use com\skysql\test\common\tasks\NodeRejoin;
@@ -45,25 +49,25 @@ $nodeid = 4;
 $commandParameters = "systemid=$systemid&username=$adminUser";
 $singleCommandParameters = $commandParameters . "&nodeid=$nodeid";
 $timeout = 40;
-
+$numberOfTests = 0;
+$failedTests = 0;
+/*
 // Ensure there are at least four nodes
 $systemInfo = new System ( $systemid, $apikeyid, $apikey );
 $lastSystemInfo = $systemInfo->go ();
 if (count ( $lastSystemInfo ['system'] ['nodes'] ) < 4) {
-	print "ERROR: there must be at least four nodes.\n";
+	echo "ERROR: there must be at least four nodes.\n";
 	exit ( 1 );
 }
 // Ensure the nodes and the system are in the down state
 if ($lastSystemInfo ['system'] ['state'] != "down") {
-	print "ERROR: the system must be down.\n";
+	echo "ERROR: the system must be down.\n";
 	exit ( 1 );
 }
-$numberOfTests = 0;
-$failedTests = 0;
 
 // Nodes up, system running
 for($count = 1; $count <= 4; $count ++) {
-	print "Node $count Start: ";
+	echo "Node $count Start: ";
 	$nodeStart = new NodeStart ( $commandParameters . "&nodeid=$count", $apikeyid, $apikey );
 	$nodeStart->go ();
 	sleep ( $timeout * 2 );
@@ -87,7 +91,7 @@ if ($lastSystemInfo ['system'] ['state'] == "running") {
 $numberOfTests ++;
 
 // Isolate
-print "Node $nodeid Isolate: ";
+echo "Node $nodeid Isolate: ";
 $nodeIsolate = new NodeIsolate ( $singleCommandParameters, $apikeyid, $apikey );
 $nodeIsolate->go ();
 sleep ( $timeout * 2 );
@@ -101,7 +105,7 @@ if ($lastNodeState ['node'] ['state'] == "isolated") {
 $numberOfTests ++;
 
 // Rejoin
-print "Node $nodeid Rejoin: ";
+echo "Node $nodeid Rejoin: ";
 $nodeRejoin = new NodeRejoin ( $singleCommandParameters, $apikeyid, $apikey );
 $nodeRejoin->go ();
 sleep ( $timeout * 2 );
@@ -115,7 +119,7 @@ if ($lastNodeState ['node'] ['state'] == "joined") {
 $numberOfTests ++;
 
 // Restart
-print "Node $nodeid Restart: ";
+echo "Node $nodeid Restart: ";
 $nodeRestart = new NodeRestart ( $singleCommandParameters, $apikeyid, $apikey );
 $nodeRestart->go ();
 sleep ( $timeout * 2 );
@@ -130,7 +134,7 @@ $numberOfTests ++;
 
 // Stop all
 for($count = 4, $remainingNodes = 4; $count >= 1; $count --) {
-	print "Node $count Stop: ";
+	echo "Node $count Stop: ";
 	$nodeStop = new NodeStop ( $commandParameters . "&nodeid=$count", $apikeyid, $apikey );
 	$nodeStop->go ();
 	sleep ( $timeout );
@@ -152,7 +156,7 @@ for($count = 4, $remainingNodes = 4; $count >= 1; $count --) {
 		$expectedSystemState = "available";
 	}
 	$lastSystemInfo = $systemInfo->go ();
-	print "System $expectedSystemState state: ";
+	echo "System $expectedSystemState state: ";
 	if ($lastSystemInfo ['system'] ['state'] == $expectedSystemState) {
 		echo "SUCCESS\n";
 	} else {
@@ -162,9 +166,9 @@ for($count = 4, $remainingNodes = 4; $count >= 1; $count --) {
 	$numberOfTests ++;
 }
 
-sleep($timeout);
+sleep($timeout);*/
 // Node Monitors
-$nodeMonitorsMetadata = array (
+$monitorsMetadata = array (
 		"availability" => array (
 				"expected" => "0.0",
 				"system" => "0.0" 
@@ -179,16 +183,36 @@ $nodeMonitorsMetadata = array (
 				"expected" => "0.0" 
 		) 
 );
-foreach ( $nodeMonitorsMetadata as $nodeMonitorKey => $value ) {
+$deltaMonitorsMetadata = array (
+		"com_create_db" => array (
+				"expected" => "0.0",
+				"system" => "0.0"
+		)
+);
+foreach ( $monitorsMetadata as $monitorKey => $value ) {
 	for($count = 1; $count <= 4; $count ++) {
-		$nodeMonitorObj = new MonitorData ( $systemid, $count, $nodeMonitorKey, $apikeyid, $apikey );
+		$nodeMonitorObj = new MonitorData ( $systemid, $count, $monitorKey, $apikeyid, $apikey );
 		$failedTests += nodeMonitor ( $nodeMonitorObj, $value ['expected'] );
 		$numberOfTests ++;
 	}
 }
-foreach ( $nodeMonitorsMetadata as $nodeMonitorKey => $value ) {
+foreach ( $monitorsMetadata as $monitorKey => $value ) {
 	if (isset ( $value ['system'] )) {
-		$systemMonitorObj = new MonitorData ( $systemid, $nodeMonitorKey, $apikeyid, $apikey );
+		$systemMonitorObj = new MonitorData ( $systemid, $monitorKey, $apikeyid, $apikey );
+		$failedTests += systemMonitor ( $systemMonitorObj, $value ['system'] );
+		$numberOfTests ++;
+	}
+}
+foreach ( $deltaMonitorsMetadata as $monitorKey => $value ) {
+	for($count = 1; $count <= 4; $count ++) {
+		$nodeMonitorObj = new MonitorData ( $systemid, $count, $monitorKey, $apikeyid, $apikey );
+		$failedTests += nodeMonitor ( $nodeMonitorObj, $value ['expected'] );
+		$numberOfTests ++;
+	}
+}
+foreach ( $deltaMonitorsMetadata as $monitorKey => $value ) {
+	if (isset ( $value ['system'] )) {
+		$systemMonitorObj = new MonitorData ( $systemid, $monitorKey, $apikeyid, $apikey );
 		$failedTests += systemMonitor ( $systemMonitorObj, $value ['system'] );
 		$numberOfTests ++;
 	}
@@ -196,29 +220,38 @@ foreach ( $nodeMonitorsMetadata as $nodeMonitorKey => $value ) {
 function nodeMonitor(&$monitorDataObj, $valueExpected) {
 	$lastNodeMonitor = $monitorDataObj->go ();
 	$valueObs = end ( $lastNodeMonitor );
-	print "Node " . $monitorDataObj->getNodeId () . " " . $monitorDataObj->getMonitorKey ();
-	print ":    expected $valueExpected    got $valueObs:    ";
+	echo "Node " . $monitorDataObj->getNodeId () . " " . $monitorDataObj->getMonitorKey ();
+	echo ":    expected $valueExpected    got $valueObs:    ";
 	if ($valueObs == $valueExpected) {
-		print "SUCCESS\n";
+		echo "SUCCESS\n";
 		return 0;
 	} else {
-		print "FAIL\n";
+		echo "FAIL\n";
 		return 1;
 	}
 }
 function systemMonitor(&$monitorDataObj, $valueExpected) {
 	$lastSystemMonitor = $monitorDataObj->go ();
 	$valueObs = end ( $lastSystemMonitor );
-	print "System " . $monitorDataObj->getMonitorKey ();
-	print ":    expected $valueExpected    got $valueObs:    ";
+	echo "System " . $monitorDataObj->getMonitorKey ();
+	echo ":    expected $valueExpected    got $valueObs:    ";
 	if ($valueObs == $valueExpected) {
-		print "SUCCESS\n";
+		echo "SUCCESS\n";
 		return 0;
 	} else {
-		print "FAIL\n";
+		echo "FAIL\n";
 		return 1;
 	}
 }
+
+function executeCommand ($systemid, $nodeid, $apikeyid, $apikey, $command = null) {
+	$node = new Node($systemid, $nodeid, $apikeyid, $apikey);
+	$nodeInfo = $node->go();
+	$nodeIP = $nodeInfo['node']['privateip'];
+	ExecuteRemote::setup($nodeIP, 'root', 'skysql');
+	$output = ExecuteRemote::executeScriptSSH("echo 1");
+}
+executeCommand ($systemid, $nodeid, $apikeyid, $apikey);
 
 $successfulTests = $numberOfTests - $failedTests;
 echo "Tests done: $numberOfTests, Successful: $successfulTests, Failed: $failedTests \n";

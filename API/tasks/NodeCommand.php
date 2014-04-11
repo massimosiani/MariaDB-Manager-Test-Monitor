@@ -25,8 +25,10 @@
 namespace com\skysql\test\common\tasks;
 
 require_once (CLASSES_ABS_PATH.'/RequestPost.php');
+require_once (API_ABS_PATH.'/nodes/Node.php');
 
 use com\skysql\test\common\RequestPost;
+use com\skysql\test\common\nodes\Node;
 
 class NodeCommand extends RequestPost {
 	
@@ -35,5 +37,27 @@ class NodeCommand extends RequestPost {
 	 */
 	public function __construct($commandName, $parameters, $apiKeyId, $apiKey) {
 		parent::__construct("command/" . $commandName, $parameters, $apiKeyId, $apiKey);
+	}
+	
+	/**
+	 * For a given amount of time, continuously retrieves the state of the node
+	 * to check whether it reached the desidered final state. Returns true if
+	 * the state has been reached in the given timeout, false otherwise.
+	 * 
+	 * @param string $state			the wanted final state
+	 * @param integer $maxTimeout	the timeout for the state to change
+	 * @return boolean		true if the state changed to given one, false otherwise
+	 */
+	public function waitForState(string $state, integer $maxTimeout = 60) {
+		$node = new Node ( $systemid, $nodeid, $apikeyid, $apikey );
+		for($count = 0; $count < $maxTimeout; $count ++) {
+			sleep ( 1 );
+			$nodeInfo = $node->go ();
+			$nodeState = $nodeInfo ['node'] ['state'];
+			if ($nodeState == $state) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
