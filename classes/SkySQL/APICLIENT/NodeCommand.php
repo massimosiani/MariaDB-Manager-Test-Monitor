@@ -22,13 +22,10 @@
  * Date: March 2014
  */
 
-namespace com\skysql\test\common\tasks;
+namespace SkySQL\APICLIENT;
 
-require_once (CLASSES_ABS_PATH.'/RequestPost.php');
-require_once (API_ABS_PATH.'/nodes/Node.php');
-
-use com\skysql\test\common\RequestPost;
-use com\skysql\test\common\nodes\Node;
+use SkySQL\APICLIENT\RequestPost;
+use SkySQL\APICLIENT\Node;
 
 class NodeCommand extends RequestPost {
 	

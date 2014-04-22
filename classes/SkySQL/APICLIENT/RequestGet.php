@@ -1,5 +1,5 @@
 <?php
-/*
+/**
  * Part of the MariaDB Manager Test Suite.
  * 
  * This file is distributed as part of the MariaDB Manager.  It is free
@@ -22,14 +22,21 @@
  * Date: March 2014
  */
 
-namespace com\skysql\test\common\tasks;
-require_once ('NodeCommand.php');
-class NodeIsolate extends NodeCommand {
+namespace SkySQL\APICLIENT;
+
+use SkySQL\APICLIENT\Request;
+
+class RequestGet extends Request {
 	
 	/**
-	 * 
+	 * The following constructors have been implemented:
+	 * construct()
+	 * construct($uri)
+	 * construct(mixed $apiKeyId, string $apiKey)
+	 * construct($uri, $apiKeyId, $apiKey)
 	 */
-	public function __construct($parameters, $apiKeyId, $apiKey) {
-		parent::__construct("isolate", $parameters, $apiKeyId, $apiKey);
+	public function __construct($uri, $apiKeyId, $apiKey) {
+		parent::__construct($uri, $apiKeyId, $apiKey);
+		$this->method = 'GET';
 	}
 }

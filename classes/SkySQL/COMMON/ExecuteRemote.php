@@ -22,7 +22,7 @@
  * Date: April 2014
  */
 
-namespace com\skysql\test\classes\nodes;
+namespace SkySQL\COMMON;
 
 class ExecuteRemote {
 	private static $host;

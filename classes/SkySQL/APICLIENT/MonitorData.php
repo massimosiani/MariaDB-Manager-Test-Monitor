@@ -22,11 +22,9 @@
  * Date: March 2014
  */
 
-namespace com\skysql\test\common\monitors;
+namespace SkySQL\APICLIENT;
 
-require_once (CLASSES_ABS_PATH . '/RequestGet.php');
-
-use com\skysql\test\common\RequestGet;
+use SkySQL\APICLIENT\RequestGet;
 
 class MonitorData extends RequestGet {
 	protected $monitorKey;

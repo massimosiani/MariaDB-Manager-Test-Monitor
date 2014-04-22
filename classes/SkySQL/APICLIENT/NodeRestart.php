@@ -22,8 +22,10 @@
  * Date: March 2014
  */
 
-namespace com\skysql\test\common\tasks;
-require_once ('NodeCommand.php');
+namespace SkySQL\APICLIENT;
+
+use SkySQL\APICLIENT\NodeCommand;
+
 class NodeRestart extends NodeCommand {
 	
 	/**

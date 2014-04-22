@@ -22,18 +22,16 @@
  * Date: March 2014
  */
 
-namespace com\skysql\test\common\systems;
+namespace SkySQL\APICLIENT;
 
-require_once (CLASSES_ABS_PATH.'/RequestGet.php');
+use SkySQL\APICLIENT\NodeCommand;
 
-use com\skysql\test\common\RequestGet;
-
-class System extends RequestGet {
+class NodeRejoin extends NodeCommand {
 	
 	/**
 	 * 
 	 */
-	public function __construct($systemid, $apiKeyId, $apiKey) {
-		parent::__construct("system/".$systemid, $apiKeyId, $apiKey);
+	public function __construct($parameters, $apiKeyId, $apiKey) {
+		parent::__construct("rejoin", $parameters, $apiKeyId, $apiKey);
 	}
 }

@@ -22,14 +22,16 @@
  * Date: March 2014
  */
 
-namespace com\skysql\test\common\tasks;
-require_once ('NodeCommand.php');
-class NodeStop extends NodeCommand {
+namespace SkySQL\APICLIENT;
+
+use SkySQL\APICLIENT\NodeCommand;
+
+class NodeIsolate extends NodeCommand {
 	
 	/**
 	 * 
 	 */
 	public function __construct($parameters, $apiKeyId, $apiKey) {
-		parent::__construct("stop", $parameters, $apiKeyId, $apiKey);
+		parent::__construct("isolate", $parameters, $apiKeyId, $apiKey);
 	}
 }

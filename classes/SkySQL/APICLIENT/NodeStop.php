@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * Part of the MariaDB Manager Test Suite.
  * 
  * This file is distributed as part of the MariaDB Manager.  It is free
@@ -22,18 +22,16 @@
  * Date: March 2014
  */
 
-namespace com\skysql\test\common\nodes;
+namespace SkySQL\APICLIENT;
 
-require_once (CLASSES_ABS_PATH.'/RequestGet.php');
+use SkySQL\APICLIENT\NodeCommand;
 
-use com\skysql\test\common\RequestGet;
-
-class Node extends RequestGet {
+class NodeStop extends NodeCommand {
 	
 	/**
 	 * 
 	 */
-	public function __construct($systemid, $nodeid, $apiKeyId, $apiKey) {
-		parent::__construct("system/".$systemid."/node/".$nodeid, $apiKeyId, $apiKey);
+	public function __construct($parameters, $apiKeyId, $apiKey) {
+		parent::__construct("stop", $parameters, $apiKeyId, $apiKey);
 	}
 }

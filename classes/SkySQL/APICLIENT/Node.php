@@ -22,19 +22,16 @@
  * Date: March 2014
  */
 
-namespace com\skysql\test\common;
-require_once ('Request.php');
-class RequestGet extends Request {
+namespace SkySQL\APICLIENT;
+
+use SkySQL\APICLIENT\RequestGet;
+
+class Node extends RequestGet {
 	
 	/**
-	 * The following constructors have been implemented:
-	 * construct()
-	 * construct($uri)
-	 * construct(mixed $apiKeyId, string $apiKey)
-	 * construct($uri, $apiKeyId, $apiKey)
+	 * 
 	 */
-	public function __construct($uri, $apiKeyId, $apiKey) {
-		parent::__construct($uri, $apiKeyId, $apiKey);
-		$this->method = 'GET';
+	public function __construct($systemid, $nodeid, $apiKeyId, $apiKey) {
+		parent::__construct("system/".$systemid."/node/".$nodeid, $apiKeyId, $apiKey);
 	}
 }

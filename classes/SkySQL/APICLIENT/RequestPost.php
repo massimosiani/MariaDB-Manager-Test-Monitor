@@ -22,8 +22,10 @@
  * Date: March 2014
  */
 
-namespace com\skysql\test\common;
-require_once ('Request.php');
+namespace SkySQL\APICLIENT;
+
+use SkySQL\APICLIENT\Request;
+
 class RequestPost extends Request {
 	
 	/**

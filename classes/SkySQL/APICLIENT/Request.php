@@ -22,7 +22,7 @@
  * Date: March 2014
  */
 
-namespace com\skysql\test\common;
+namespace SkySQL\APICLIENT;
 
 class Request {
 	protected $dateHeader;

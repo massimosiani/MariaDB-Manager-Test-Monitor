@@ -1,7 +1,7 @@
 <?php
 /*
  * Part of the MariaDB Manager Test Suite.
- *
+ * 
  * This file is distributed as part of the MariaDB Manager.  It is free
  * software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation,
@@ -19,12 +19,19 @@
  * Copyright 2014 SkySQL Corporation Ab
  *
  * Author: Massimo Siani
- * Date: April 2014
+ * Date: March 2014
  */
 
-if (! defined ( "API_ABS_PATH" )) {
-	define ( "API_ABS_PATH", dirname ( __DIR__ ) );
-}
-if (! defined ( "CLASSES_ABS_PATH" )) {
-	define ( "CLASSES_ABS_PATH", API_ABS_PATH . "/classes" );
+namespace SkySQL\APICLIENT;
+
+use SkySQL\APICLIENT\NodeCommand;
+
+class NodeStart extends NodeCommand {
+	
+	/**
+	 * 
+	 */
+	public function __construct($parameters, $apiKeyId, $apiKey) {
+		parent::__construct("start", $parameters, $apiKeyId, $apiKey);
+	}
 }
