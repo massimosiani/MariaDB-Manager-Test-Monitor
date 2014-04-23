@@ -78,8 +78,10 @@ class MonitorTest {
 	 * Override this to load different parameters.
 	 */
 	protected function init() {
-		$this->apiKeyId = 3; // hard code in the test suite
-		$conf = parse_ini_string(file_get_contents("http://localhost/manager.ini", false), true);
+		$apikeyid = 3; // hard code in the test suite
+		$apihost = "localhost";
+		$this->apiKeyId = $apikeyid;
+		$conf = parse_ini_string(file_get_contents("http://$apihost/manager.ini", false), true);
 		$this->apiKey = $conf['apikeys']["$this->apiKeyId"];
 		$this->adminUser = "admin";
 		$systems = new System(1, $this->apiKeyId, $this->apiKey);
