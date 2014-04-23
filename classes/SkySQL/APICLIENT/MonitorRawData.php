@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * Part of the MariaDB Manager Test Suite.
  * 
  * This file is distributed as part of the MariaDB Manager.  It is free
@@ -26,6 +26,10 @@ namespace SkySQL\APICLIENT;
 
 use SkySQL\APICLIENT\RequestGet;
 
+/**
+ * @author Massimo Siani
+ *
+ */
 class MonitorRawData extends RequestGet {
 	protected $monitorKey;
 	protected $systemId;

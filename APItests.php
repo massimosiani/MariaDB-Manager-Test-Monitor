@@ -1,27 +1,27 @@
 <?php
+/*
+ * Part of the MariaDB Manager Test Suite.
+ * 
+ * This file is distributed as part of the MariaDB Manager.  It is free
+ * software: you can redistribute it and/or modify it under the terms of the
+ * GNU General Public License as published by the Free Software Foundation,
+ * version 2.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 51
+ * Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Copyright 2014 SkySQL Corporation Ab
+ *
+ * Author: Massimo Siani
+ * Date: March 2014
+ */
 
-/**
-* Part of the MariaDB Manager Test Suite.
-* 
-* This file is distributed as part of the MariaDB Manager.  It is free
-* software: you can redistribute it and/or modify it under the terms of the
-* GNU General Public License as published by the Free Software Foundation,
-* version 2.
-*
-* This program is distributed in the hope that it will be useful, but WITHOUT
-* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-* FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-* details.
-*
-* You should have received a copy of the GNU General Public License along with
-* this program; if not, write to the Free Software Foundation, Inc., 51
-* Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-*
-* Copyright 2014 SkySQL Corporation Ab
-*
-* Author: Massimo Siani
-* Date: March 2014
-*/
 namespace SkySQL\Manager\Testing\Monitor;
 
 use SkySQL\COMMON\ExecuteRemote;
@@ -35,8 +35,8 @@ use SkySQL\APICLIENT\Node;
 use SkySQL\APICLIENT\System;
 
 class MonitorTest {
-	protected $apikeyid = 5;
-	protected $apikey = "84e915085ab3d2673ac5d5f99946e359";
+	protected $apiKeyId = 5;
+	protected $apiKey = "84e915085ab3d2673ac5d5f99946e359";
 	protected $adminUser = "admin";
 	protected $systemid = 1;
 	protected $nodeid = 4;
@@ -70,6 +70,7 @@ class MonitorTest {
 				__CLASS__,
 				'simpleAutoload' 
 		) );
+		$this->init();
 	}
 	
 	/**
@@ -77,14 +78,16 @@ class MonitorTest {
 	 * Override this to load different parameters.
 	 */
 	protected function init() {
-		$this->apikeyid = 5;
-		$this->apikey = "84e915085ab3d2673ac5d5f99946e359";
+		$this->apiKeyId = 3; // hard code in the test suite
+		$conf = parse_ini_string(file_get_contents("http://localhost/manager.ini", false), true);
+		$this->apiKey = $conf['apikeys']["$this->apiKeyId"];
 		$this->adminUser = "admin";
-		$systems = new System(0, $this->apikeyid, $this->apikey);
-		$sysArray = $systems->go();
+		$systems = new System(1, $this->apiKeyId, $this->apiKey);
+		$sysArray = $systems->getAll();
 		$this->systemid = $sysArray['systems'][0]['systemid'];
-		$nodes = new Node($this->systemid, 4, $this->apikeyid, $this->apikey);
-		$this->nodeid = $nodes[0];
+		$systems = new System($this->systemid, $this->apiKeyId, $this->apiKey);
+		$nodesArray = $systems->getAllNodes();
+		$this->nodeid = end($nodesArray);
 		$this->commandParameters = "systemid=$this->systemid&username=$this->adminUser";
 		$this->singleCommandParameters = $this->commandParameters . "&nodeid=$this->nodeid";
 		$this->timeout = 40;
@@ -112,7 +115,7 @@ class MonitorTest {
 	
 	public function runTests () {
 		// Ensure there are at least four nodes
-		$systemInfo = new System ( $this->systemid, $this->apikeyid, $this->apikey );
+		$systemInfo = new System ( $this->systemid, $this->apiKeyId, $this->apiKey );
 		$lastSystemInfo = $systemInfo->go ();
 		if (count ( $lastSystemInfo ['system'] ['nodes'] ) < 4) {
 			echo "ERROR: there must be at least four nodes.\n";
@@ -126,10 +129,10 @@ class MonitorTest {
 		// Nodes up, system running
 		for($count = 1; $count <= 4; $count ++) {
 			echo "Node $count Start: ";
-			$nodeStart = new NodeStart ( $this->commandParameters . "&nodeid=$count", $this->apikeyid, $this->apikey );
+			$nodeStart = new NodeStart ( $this->commandParameters . "&nodeid=$count", $this->apiKeyId, $this->apiKey );
 			$nodeStart->go ();
 			sleep ( $this->timeout * 2 );
-			$nodeInfo = new Node ( $this->systemid, $count, $this->apikeyid, $this->apikey );
+			$nodeInfo = new Node ( $this->systemid, $count, $this->apiKeyId, $this->apiKey );
 			$lastNodeState = $nodeInfo->go ();
 			if ($lastNodeState ['node'] ['state'] == "joined") {
 				echo "SUCCESS\n";
@@ -149,7 +152,7 @@ class MonitorTest {
 		$this->numberOfTests ++;
 		// Isolate
 		echo "Node $this->nodeid Isolate: ";
-		$nodeIsolate = new NodeIsolate ( $this->singleCommandParameters, $this->apikeyid, $this->apikey );
+		$nodeIsolate = new NodeIsolate ( $this->singleCommandParameters, $this->apiKeyId, $this->apiKey );
 		$nodeIsolate->go ();
 		sleep ( $this->timeout * 2 );
 		$lastNodeState = $nodeInfo->go ();
@@ -162,7 +165,7 @@ class MonitorTest {
 		$this->numberOfTests ++;
 		// Rejoin
 		echo "Node $this->nodeid Rejoin: ";
-		$nodeRejoin = new NodeRejoin ( $this->singleCommandParameters, $this->apikeyid, $this->apikey );
+		$nodeRejoin = new NodeRejoin ( $this->singleCommandParameters, $this->apiKeyId, $this->apiKey );
 		$nodeRejoin->go ();
 		sleep ( $this->timeout * 2 );
 		$lastNodeState = $nodeInfo->go ();
@@ -175,7 +178,7 @@ class MonitorTest {
 		$this->numberOfTests ++;
 		// Restart
 		echo "Node $this->nodeid Restart: ";
-		$nodeRestart = new NodeRestart ( $this->singleCommandParameters, $this->apikeyid, $this->apikey );
+		$nodeRestart = new NodeRestart ( $this->singleCommandParameters, $this->apiKeyId, $this->apiKey );
 		$nodeRestart->go ();
 		sleep ( $this->timeout * 2 );
 		$lastNodeState = $nodeInfo->go ();
@@ -189,10 +192,10 @@ class MonitorTest {
 		// Stop all
 		for($count = 4, $remainingNodes = 4; $count >= 1; $count --) {
 			echo "Node $count Stop: ";
-			$nodeStop = new NodeStop ( $this->commandParameters . "&nodeid=$count", $this->apikeyid, $this->apikey );
+			$nodeStop = new NodeStop ( $this->commandParameters . "&nodeid=$count", $this->apiKeyId, $this->apiKey );
 			$nodeStop->go ();
 			sleep ( $this->timeout );
-			$nodeInfo = new Node ( $this->systemid, $count, $this->apikeyid, $this->apikey );
+			$nodeInfo = new Node ( $this->systemid, $count, $this->apiKeyId, $this->apiKey );
 			$lastNodeState = $nodeInfo->go ();
 			if ($lastNodeState ['node'] ['state'] == "down") {
 				echo "SUCCESS" . "\n";
@@ -245,28 +248,28 @@ class MonitorTest {
 		);
 		foreach ( $monitorsMetadata as $monitorKey => $value ) {
 			for($count = 1; $count <= 4; $count ++) {
-				$nodeMonitorObj = new MonitorData ( $this->systemid, $count, $monitorKey, $this->apikeyid, $this->apikey );
+				$nodeMonitorObj = new MonitorData ( $this->systemid, $count, $monitorKey, $this->apiKeyId, $this->apiKey );
 				$this->failedTests += nodeMonitor ( $nodeMonitorObj, $value ['expected'] );
 				$this->numberOfTests ++;
 			}
 		}
 		foreach ( $monitorsMetadata as $monitorKey => $value ) {
 			if (isset ( $value ['system'] )) {
-				$systemMonitorObj = new MonitorData ( $this->systemid, $monitorKey, $this->apikeyid, $this->apikey );
+				$systemMonitorObj = new MonitorData ( $this->systemid, $monitorKey, $this->apiKeyId, $this->apiKey );
 				$this->failedTests += systemMonitor ( $systemMonitorObj, $value ['system'] );
 				$this->numberOfTests ++;
 			}
 		}
 		foreach ( $deltaMonitorsMetadata as $monitorKey => $value ) {
 			for($count = 1; $count <= 4; $count ++) {
-				$nodeMonitorObj = new MonitorData ( $this->systemid, $count, $monitorKey, $this->apikeyid, $this->apikey );
+				$nodeMonitorObj = new MonitorData ( $this->systemid, $count, $monitorKey, $this->apiKeyId, $this->apiKey );
 				$this->failedTests += nodeMonitor ( $nodeMonitorObj, $value ['expected'] );
 				$this->numberOfTests ++;
 			}
 		}
 		foreach ( $deltaMonitorsMetadata as $monitorKey => $value ) {
 			if (isset ( $value ['system'] )) {
-				$systemMonitorObj = new MonitorData ( $this->systemid, $monitorKey, $this->apikeyid, $this->apikey );
+				$systemMonitorObj = new MonitorData ( $this->systemid, $monitorKey, $this->apiKeyId, $this->apiKey );
 				$this->failedTests += systemMonitor ( $systemMonitorObj, $value ['system'] );
 				$this->numberOfTests ++;
 			}
@@ -304,7 +307,7 @@ class MonitorTest {
 			ExecuteRemote::setup ( $nodeIP, 'root', 'skysql' );
 			$output = ExecuteRemote::executeScriptSSH ( "echo 1" );
 		}
-		executeCommand ( $this->systemid, $this->nodeid, $this->apikeyid, $this->apikey );
+		executeCommand ( $this->systemid, $this->nodeid, $this->apiKeyId, $this->apiKey );
 		
 		$successfulTests = $this->numberOfTests - $this->failedTests;
 		echo "Tests done: $this->numberOfTests, Successful: $successfulTests, Failed: $this->failedTests \n";

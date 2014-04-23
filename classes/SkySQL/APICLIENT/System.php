@@ -26,6 +26,10 @@ namespace SkySQL\APICLIENT;
 
 use SkySQL\APICLIENT\RequestGet;
 
+/**
+ * @author Massimo Siani
+ *
+ */
 class System extends RequestGet {
 	
 	/**
@@ -35,9 +39,21 @@ class System extends RequestGet {
 		parent::__construct("system/".$systemid, $apiKeyId, $apiKey);
 	}
 	
+	/**
+	 * @return unknown
+	 */
 	public function getAll() {
-	$allSystems = new RequestGet("system", $this->apikeyid, $this->apikey);
-	$result = $allSystems->go();
-	return $result;
+		$allSystems = new RequestGet ( "system", $this->apiKeyId, $this->apiKey );
+		$result = $allSystems->go ();
+		return $result;
+	}
+	
+	/**
+	 * @return unknown
+	 */
+	public function getAllNodes() {
+		$nodesArray = $this->go ();
+		$result = $nodesArray ['system'] ['nodes'];
+		return $result;
 	}
 }

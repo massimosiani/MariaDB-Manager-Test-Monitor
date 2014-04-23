@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * Part of the MariaDB Manager Test Suite.
  * 
  * This file is distributed as part of the MariaDB Manager.  It is free
@@ -24,6 +24,10 @@
 
 namespace SkySQL\APICLIENT;
 
+/**
+ * @author Massimo Siani
+ *
+ */
 class Request {
 	protected $dateHeader;
 	protected $acceptHeader = "application/json";
@@ -89,7 +93,10 @@ class Request {
 		$this->apiKey = $apiKey;
 	}
 	/**
-	 * Performs the request.
+	 * Performs the request and takes care of setting appropriate headers
+	 * as required by the API.
+	 * Decodes the JSON got from the API
+	 * and returns the corresponding object.
 	 */
 	public function go() {
 		$this->fullUri = $this->baseUri . $this->uri;
@@ -136,7 +143,7 @@ class Request {
 		$this->headers ['Date'] = $this->dateHeader;
 	}
 	/**
-	 * Sets the authorization header.
+	 * Sets the authorization header, as described in the API KB.
 	 */
 	protected function setAuthHeader() {
 		if (! isset ( $this->dateHeader )) {
@@ -148,10 +155,17 @@ class Request {
 	}
 	
 	/**
-	 * @param string $url
-	 * @param array $parameters
-	 * @param array $headers
-	 * @return string
+	 * Once the headers have been properly set, immediately call this
+	 * function. The authorization date is based on the date header,
+	 * which in turn is checked by the API. Thus, there should not be
+	 * any delay between setting the headers and calling this function.
+	 * 
+	 * Returns the body as returned by the API. No check is performed
+	 * on the returned headers.
+	 * @param string $url		the full request url
+	 * @param array $parameters	parameters to be passed to the API, can be null
+	 * @param array $headers	an array of the headers, default is null
+	 * @return string		the body as returned by the API
 	 */
 	protected function do_request($url, $parameters, $headers = null) {
 		$headers_option = array ();
@@ -170,7 +184,19 @@ class Request {
 		return $result;
 	}
 	
+	/**
+	 * The lastResponse field contains the original body
+	 * from the API.
+	 */
 	public function getLastResponse() {
 		return $this->lastResponse;
+	}
+	
+	/**
+	 * Returns the base API URI, including the trailing '/'.
+	 * For instance: http://localhost/restfulapi/
+	 */
+	public function getBaseUri() {
+		return $this->baseUri;
 	}
 }

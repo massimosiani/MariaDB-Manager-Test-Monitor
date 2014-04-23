@@ -27,6 +27,10 @@ namespace SkySQL\APICLIENT;
 use SkySQL\APICLIENT\RequestPost;
 use SkySQL\APICLIENT\Node;
 
+/**
+ * @author Massimo Siani
+ *
+ */
 class NodeCommand extends RequestPost {
 	
 	/**

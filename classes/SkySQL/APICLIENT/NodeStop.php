@@ -26,6 +26,10 @@ namespace SkySQL\APICLIENT;
 
 use SkySQL\APICLIENT\NodeCommand;
 
+/**
+ * @author Massimo Siani
+ *
+ */
 class NodeStop extends NodeCommand {
 	
 	/**

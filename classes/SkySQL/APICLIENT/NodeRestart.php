@@ -26,6 +26,10 @@ namespace SkySQL\APICLIENT;
 
 use SkySQL\APICLIENT\NodeCommand;
 
+/**
+ * @author Massimo Siani
+ *
+ */
 class NodeRestart extends NodeCommand {
 	
 	/**

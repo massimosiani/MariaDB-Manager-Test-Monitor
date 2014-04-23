@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * Part of the MariaDB Manager Test Suite.
  * 
  * This file is distributed as part of the MariaDB Manager.  It is free
@@ -26,19 +26,18 @@ namespace SkySQL\APICLIENT;
 
 use SkySQL\APICLIENT\RequestGet;
 
+/**
+ * @author Massimo Siani
+ *
+ */
 class Node extends RequestGet {
+	protected $systemId;
 	
 	/**
 	 * 
 	 */
 	public function __construct($systemid, $nodeid, $apiKeyId, $apiKey) {
+		$this->systemId = $systemid;
 		parent::__construct("system/".$systemid."/node/".$nodeid, $apiKeyId, $apiKey);
-	}
-	
-	public function getAll() {
-	$systemInfo = new System($this->systemid, $this->apikeyid, $this->apikey);
-	$nodesArray = $systemInfo->go();
-	$result = $nodesArray['system']['nodes'];
-	return $result;
 	}
 }
