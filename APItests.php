@@ -80,8 +80,11 @@ class MonitorTest {
 		$this->apikeyid = 5;
 		$this->apikey = "84e915085ab3d2673ac5d5f99946e359";
 		$this->adminUser = "admin";
-		$this->systemid = 1;
-		$this->nodeid = 4;
+		$systems = new System(0, $this->apikeyid, $this->apikey);
+		$sysArray = $systems->go();
+		$this->systemid = $sysArray['systems'][0]['systemid'];
+		$nodes = new Node($this->systemid, 4, $this->apikeyid, $this->apikey);
+		$this->nodeid = $nodes[0];
 		$this->commandParameters = "systemid=$this->systemid&username=$this->adminUser";
 		$this->singleCommandParameters = $this->commandParameters . "&nodeid=$this->nodeid";
 		$this->timeout = 40;

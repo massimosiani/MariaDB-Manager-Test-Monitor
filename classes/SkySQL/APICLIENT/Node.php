@@ -34,4 +34,11 @@ class Node extends RequestGet {
 	public function __construct($systemid, $nodeid, $apiKeyId, $apiKey) {
 		parent::__construct("system/".$systemid."/node/".$nodeid, $apiKeyId, $apiKey);
 	}
+	
+	public function getAll() {
+	$systemInfo = new System($this->systemid, $this->apikeyid, $this->apikey);
+	$nodesArray = $systemInfo->go();
+	$result = $nodesArray['system']['nodes'];
+	return $result;
+	}
 }

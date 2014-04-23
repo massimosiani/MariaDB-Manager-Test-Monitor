@@ -34,4 +34,10 @@ class System extends RequestGet {
 	public function __construct($systemid, $apiKeyId, $apiKey) {
 		parent::__construct("system/".$systemid, $apiKeyId, $apiKey);
 	}
+	
+	public function getAll() {
+	$allSystems = new RequestGet("system", $this->apikeyid, $this->apikey);
+	$result = $allSystems->go();
+	return $result;
+	}
 }
