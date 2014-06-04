@@ -34,6 +34,13 @@ use SkySQL\APICLIENT\NodeStop;
 use SkySQL\APICLIENT\Node;
 use SkySQL\APICLIENT\System;
 
+/**
+ * Retrieves the parameters from the MariaDB-Manager-API-test package
+ * and runs the tests. Call it with runTests().
+ * 
+ * @author Massimo Siani
+ *
+ */
 class MonitorTest {
 	protected $apiKeyId = 5;
 	protected $apiKey = "84e915085ab3d2673ac5d5f99946e359";
@@ -78,7 +85,7 @@ class MonitorTest {
 	 * Override this to load different parameters.
 	 */
 	protected function init() {
-		$apikeyid = 3; // hard code in the test suite
+		$apikeyid = 1; // hard code in the test suite
 		$apihost = "localhost";
 		$this->apiKeyId = $apikeyid;
 		$conf = parse_ini_string(file_get_contents("http://$apihost/manager.ini", false), true);
@@ -115,6 +122,11 @@ class MonitorTest {
 		return false;
 	}
 	
+	/**
+	 * 
+	 * @return number|unknown the number of failed tests, or exits with
+	 * an error
+	 */
 	public function runTests () {
 		// Ensure there are at least four nodes
 		$systemInfo = new System ( $this->systemid, $this->apiKeyId, $this->apiKey );
@@ -313,8 +325,11 @@ class MonitorTest {
 		
 		$successfulTests = $this->numberOfTests - $this->failedTests;
 		echo "Tests done: $this->numberOfTests, Successful: $successfulTests, Failed: $this->failedTests \n";
+		
+		return $failedTests;
 	}
 }
 
 $monitorTest = new MonitorTest();
-$monitorTest->runTests();
+$failedTests = $monitorTest->runTests();
+exit ($failedTests);
